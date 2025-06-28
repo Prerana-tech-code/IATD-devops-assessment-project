@@ -90,7 +90,8 @@ export function logSeparated(toPrint, lineLength) {
  * @param {string} date the date to validate
  */
 export function isValidDateString(date) {
-  const dayString = date.substring(0, 2);
+  // commenting this as it is defined but not used later to fix the problem- [no-unused-vars]
+  // const dayString = date.substring(0, 2);
   const daysInMonths = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // assume 29 days in February for simplicity
   const segments = date.split("/"); // split the date into the three segments (i.e. DD, MM, YYYY)
 
