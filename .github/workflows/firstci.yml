@@ -1,52 +1,59 @@
-name: Main CI                             # Name of the GitHub Actions workflow
+name: Main CI # Name of the GitHub Actions workflow
 
-on: push                                  # Trigger this workflow on every push to the repository
+on: push # Trigger this workflow on every push to the repository
 
-
-jobs:                                     # Define jobs to run in the workflow
-  Init_and_test:                          # Job name
+jobs: # Define jobs to run in the workflow
+  Init_and_test: # Job name
     name: Init and Test
 
-    runs-on: ubuntu-latest                # The OS environment where the job will run
+    runs-on: ubuntu-latest # The OS environment where the job will run
 
-    steps:                                # List of steps to run in this job
-      - name: Checkout Code               # Check out repository code
-        uses: actions/checkout@v4         # Action to clone your repo into the runner
+    steps: # List of steps to run in this job
+      - name: Checkout Code # Check out repository code
+        uses: actions/checkout@v4 # Action to clone your repo into the runner
 
-      - name: Setup Node                  # Set up Node.js environment
-        uses: actions/setup-node@v4       # Official action to install Node.js
+      - name: Setup Node # Set up Node.js environment
+        uses: actions/setup-node@v4 # Official action to install Node.js
         with:
-          node-version: 20.12.1           # Specify Node.js version to install
-          cache: npm                      # Cache npm dependencies for faster runs
+          node-version: 20.12.1 # Specify Node.js version to install
+          cache: npm # Cache npm dependencies for faster runs
 
-      - name: Initialise npm               # install npm dependencies
+      - name: Initialise npm # install npm dependencies
         run: npm ci
 
-      - name: Perform Static Analysis with ESLint         #Run ESLint for code quality check
-        run: npx eslint -o eslint_report.json -f json     #Run ESLint, output to json report
-        continue-on-error: true                           # Don't fail the build if ESLint errors exist
+      - name: Perform Static Analysis with ESLint #Run ESLint for code quality check
+        run: npx eslint -o eslint_report.json -f json #Run ESLint, output to json report
+        continue-on-error: true # Don't fail the build if ESLint errors exist
 
-      - name: Create ESLint Annotations                   #Step to create GitHub annotations from ESLint report
-        uses: ataylorme/eslint-annotate-action@v3         #Action to add ESLint results to issues
+      - name: Create ESLint Annotations #Step to create GitHub annotations from ESLint report
+        uses: ataylorme/eslint-annotate-action@v3 #Action to add ESLint results to issues
         with:
-          only-pr-files: false                             # Analyze all files, not just those in PR
-      - name: Run Jest Tests                               # Run unit tests using Jest
-        run: npm test                                      # Execute test script defined in package.json
+          only-pr-files: false # Analyze all files, not just those in PR
+      - name: Run Jest Tests # Run unit tests using Jest
+        run: npm test # Execute test script defined in package.json
 
-      - name: Log in to Docker Hub                       # log in to Docker Hub for pushing images
-        uses: docker/login-action@v3                     # Official Docker login action
+      - name: Log in to Docker Hub # log in to Docker Hub for pushing images
+        uses: docker/login-action@v3 # Official Docker login action
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}    # Docker Hub username stored as GitHub secret
-          password: ${{ secrets.DOCKERHUB_TOKEN }}       # Docker Hub access token stored as secret
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # Docker Hub username stored as GitHub secret
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # Docker Hub access token stored as secret
 
-      - name: Set up Docker Buildx                       # set up Docker Buildx for multi-platform builds
-        uses: docker/setup-buildx-action@v3               
+      - name: Set up Docker Buildx # set up Docker Buildx for multi-platform builds
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image                # Build Docker image and push to Docker Hub
+      - name: Build and push  test Docker image # Build Docker image and push to Docker Hub
         uses: docker/build-push-action@v5
         with:
-          context: .                                     # Build context: current directory 
-          file: Dockerfiles/test.Dockerfile              # Path to Dockerfile to build the image
-          push: true                                     # Push the image after building
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/khare-prerana-intro-to-devops-a2:test-latest   # Docker image tag (repository and tag)
-  
+          context: . # Build context: current directory
+          file: Dockerfiles/test.Dockerfile # Path to Dockerfile to build the image
+          push: true # Push the image after building
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/khare-prerana-intro-to-devops-a2:test-latest # Docker image tag (repository and tag)
+
+          # Build and push the user facing Docker image
+      - name: Build and push user Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Use the root of the repo as the Docker build context
+          file: Dockerfiles/user.Dockerfile # Specify the user-facing Dockerfile
+          push: true # Push the image to Docker Hub after building
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/khare-prerana-intro-to-devops-a2:user-latest # Tag the image with the required format

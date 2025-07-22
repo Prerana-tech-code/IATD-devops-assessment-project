@@ -2,15 +2,22 @@
 # Using a Node.js image to start with
  FROM node:20.12-alpine                   
 
-
-# Copy the files needed to install npm packages
+# Copy package files to install dependencies
  COPY package.json package-lock.json ./  
     
 # Install all the project dependencies
  RUN npm install 
 
- # copy everything else, your app code, tests, etc.
- COPY ./ ./     
+# Avoid copying everything to reduce image size and avoid security risks
+# COPY ./ ./    # Not using to avoid copying unnecessary files (.git,.github, Dockerfiles and node_modules)
 
- # When the container runs, this will run test cases
+# Copy application and test files
+COPY src/ ./src/
+COPY tests/ ./tests/
+
+# Copy config files used during testing
+COPY eslint.config.mjs ./
+COPY jest.config.mjs ./
+
+# Run test cases when the container starts
  CMD [ "npm", "test" ]                       
